@@ -60,14 +60,14 @@
             filter: grayscale(0.5); 
         }
 
-        /* Animazione di scorrimento veloce: L'abbassiamo ancora di più (0.8s) per il primo "lancio" */
+        /* Animazione di scorrimento veloce */
         @keyframes fast-spin {
             from { transform: translateX(0); }
             to { transform: translateX(-1000px); }
         }
 
         .spinning {
-            /* DURATA AUMENTATA per una rotazione iniziale molto lenta */
+            /* Mantenuta a 0.8s per un inizio lento/fluido, ma gestita principalmente dalla transizione JS */
             animation: fast-spin 0.8s linear infinite; 
         }
 
@@ -118,7 +118,7 @@
             justify-content: center;
             gap: 20px;
             z-index: 900;
-            transition: all 0.7s ease-out; /* Velocizzato a 0.7s */
+            transition: all 0.7s ease-out; 
             pointer-events: none;
         }
 
@@ -223,10 +223,9 @@
             const finalWinnerDisplay = document.getElementById('finalWinnerDisplay');
 
             const IMAGE_WIDTH = 220; 
-            // IMPOSTAZIONE: Durata totale del rallentamento fissata a 4 secondi
-            const DURATION = 4000; 
+            // MODIFICA: Durata totale del rallentamento fissata a 8 secondi
+            const DURATION = 8000; 
             
-            // Il ritardo è 0, perché l'ingrandimento deve avvenire subito dopo lo stop.
             const DELAY_BEFORE_WIN_EFFECT = 0; 
 
             // 1. Clonazione della striscia per l'effetto di scorrimento infinito
@@ -251,18 +250,14 @@
                 
                 filmStrip.style.transition = 'none';
                 
-                // Sposta la striscia per iniziare il giro veloce
-                // Questo crea il punto di partenza per l'animazione di 4 secondi
+                // Sposta la striscia per iniziare il giro (punto di partenza)
                 filmStrip.style.transform = `translateX(-${(filmStrip.scrollWidth * 0.7) - winningImage.offsetLeft}px)`; 
                 void filmStrip.offsetWidth;
 
-                // Non usiamo l'animazione CSS 'spinning' per il giro veloce,
-                // ma impostiamo direttamente il rallentamento per far durare l'intera rotazione 4 secondi.
-                // Rimuoviamo la classe per evitare conflitti:
+                // Rimuoviamo la classe 'spinning' se presente, e gestiamo il movimento solo con la transizione
                 filmStrip.classList.remove('spinning'); 
 
-                // Avvia il rallentamento immediatamente con i 4 secondi di durata
-                // NOTA: Poiché l'intera durata è di 4s, l'animazione inizia lenta.
+                // Avvia il rallentamento immediatamente per farlo durare 8 secondi totali
                 
                 const containerWidth = wheelContainer.clientWidth;
                 const winningOffset = winningImage.offsetLeft; 
@@ -270,8 +265,8 @@
                 // Calcola la posizione per centrare la Pixar sul puntatore
                 const FINAL_STOP_X = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                 
-                // Applica la transizione di 4 secondi con rallentamento
-                filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.1, 0.7, 0.7, 1)`; /* Curve di rallentamento ottimizzata per 4s */
+                // Applica la transizione di 8 secondi con rallentamento (cubic-bezier)
+                filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.1, 0.7, 0.7, 1)`; 
                 filmStrip.style.transform = `translateX(${FINAL_STOP_X}px)`;
 
                 // 3. Gestisci la fine della transizione
@@ -281,12 +276,12 @@
             function handleSpinEnd() {
                 // Il giro è finito. La ruota è ferma sul logo Pixar.
 
-                // 1. Attendi 0 secondi (DELAY_BEFORE_WIN_EFFECT) prima di attivare l'animazione di vittoria
+                // 1. Attendi 0 secondi (o un piccolo ritardo) prima di attivare l'animazione di vittoria
                 setTimeout(() => {
                     // Nascondi il container della ruota (e il puntatore)
                     wheelContainer.classList.add('hidden'); 
                     
-                    // Nascondi il pulsante (opzionale)
+                    // Nascondi il pulsante
                     spinButton.style.display = 'none'; 
 
                     // Mostra il display finale ingrandito e centrato
@@ -296,7 +291,7 @@
 
                 }, DELAY_BEFORE_WIN_EFFECT);
                 
-                 // Riabilita il pulsante (e lo fa riapparire) dopo che la vittoria è apparsa
+                 // Riabilita il pulsante dopo che la vittoria è apparsa (per un nuovo giro)
                  setTimeout(() => {
                      spinButton.style.display = 'block';
                      spinButton.disabled = false;
