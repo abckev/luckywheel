@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Ruota della Fortuna - Pixar</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      font-family: sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #container {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      height: 200px;
+      border: 5px solid #fff;
+      background-color: #222;
+    }
+
+    #carousel {
+      display: flex;
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      transition: transform 0.1s linear;
+    }
+
+    .logo {
+      height: 180px;
+      margin: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    #startButton {
+      margin-top: 20px;
+      padding: 15px 30px;
+      font-size: 20px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #pixarHighlight {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1);
+      transition: transform 1s ease;
+      z-index: 10;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: hsl(var(--hue), 100%, 50%);
+      animation: fall 3s linear forwards;
+      opacity: 0.8;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <div id="carousel"></div>
+</div>
+<button id="startButton">Premi</button>
+
+<script>
+  const logos = [
+    'https://upload.wikimedia.org/wikipedia/commons/3/3b/Universal_Pictures_logo.svg',
+    'https://upload.wikimedia.org/wikipedia/commons/2/29/Paramount_Pictures_2022_logo.svg',
+    'https://upload.wikimedia.org/wikipedia/commons/1/1e/Warner_Bros._Pictures_logo.svg',
+    'https://upload.wikimedia.org/wikipedia/commons/3/3e/Columbia_Pictures_logo.svg',
+    'https://upload.wikimedia.org/wikipedia/commons/4/4a/Pixar_Logo.svg', // <- VINCITORE
+    'https://upload.wikimedia.org/wikipedia/commons/e/e2/Walt_Disney_Pictures_logo.svg',
+    'https://upload.wikimedia.org/wikipedia/commons/d/d2/20th_Century_Fox_logo.svg',
+    'https://upload.wikimedia.org/wikipedia/commons/4/4a/Pixar_Logo.svg', // Pixar di nuovo per più probabilità
+  ];
+
+  const carousel = document.getElementById('carousel');
+  const startButton = document.getElementById('startButton');
+  let animationId;
+  let offset = 0;
+  let speed = 10;
+  let running = false;
+  let slowingDown = false;
+
+  // Carica le immagini
+  logos.forEach(src => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'logo';
+    carousel.appendChild(img);
+  });
+
+  // Duplico per effetto looping
+  logos.forEach(src => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'logo';
+    carousel.appendChild(img);
+  });
+
+  function animate() {
+    offset -= speed;
+    carousel.style.transform = `translateX(${offset}px)`;
+
+    // Reset offset se finisce
+    if (Math.abs(offset) >= carousel.scrollWidth / 2) {
+      offset = 0;
+    }
+
+    if (slowingDown) {
+      speed *= 0.98; // rallenta progressivamente
+
+      if (speed < 0.5) {
+        cancelAnimationFrame(animationId);
+        highlightPixar();
+        return;
+      }
+    }
+
+    animationId = requestAnimationFrame(animate);
+  }
+
+  startButton.onclick = () => {
+    if (running) return;
+
+    running = true;
+    slowingDown = false;
+    speed = 20;
+    animate();
+
+    setTimeout(() => {
+      slowingDown = true;
+    }, 3000); // dopo 3s inizia a rallentare
+  };
+
+  function highlightPixar() {
+    const imgs = document.querySelectorAll('.logo');
+    for (let img of imgs) {
+      if (img.src.includes('Pixar')) {
+        const clone = img.cloneNode();
+        clone.id = 'pixarHighlight';
+        document.body.appendChild(clone);
+        clone.style.transform = 'translate(-50%, -50%) scale(3)';
+        launchConfetti();
+        break;
+      }
+    }
+  }
+
+  function launchConfetti() {
+    for (let i = 0; i < 100; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * window.innerWidth + 'px';
+      confetti.style.top = '-10px';
+      confetti.style.setProperty('--hue', Math.random() * 360);
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 3000);
+    }
+  }
+</script>
+</body>
+</html>
