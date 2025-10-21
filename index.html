@@ -60,14 +60,15 @@
             filter: grayscale(0.5); /* I loghi non vincenti sono leggermente meno vividi */
         }
 
-        /* Animazione di scorrimento veloce (usata da JS) */
+        /* Animazione di scorrimento veloce */
         @keyframes fast-spin {
             from { transform: translateX(0); }
             to { transform: translateX(-1000px); /* Sposta di una quantità fissa */ }
         }
 
+        /* MODIFICA CSS: Aumentata a 0.3s per una rotazione iniziale più lenta */
         .spinning {
-            animation: fast-spin 0.2s linear infinite; /* Animazione veloce e continua */
+            animation: fast-spin 0.3s linear infinite; 
         }
 
         /* === Pulsante "Premi" === */
@@ -128,12 +129,12 @@
             to { transform: scale(1) rotateX(0deg); opacity: 1; }
         }
 
-        /* Stili per i coriandoli (generati da JS, ma qui definiamo l'aspetto) */
+        /* Stili per i coriandoli */
         .confetti {
             position: absolute;
             width: 10px;
             height: 10px;
-            background-color: #f00; /* Colore base (sarà modificato da JS) */
+            background-color: #f00; 
             opacity: 0;
             animation: fall 3s ease-in infinite;
         }
@@ -190,12 +191,12 @@
 
             // Larghezza effettiva di un logo (200px + 20px padding)
             const IMAGE_WIDTH = 220; 
-            const DURATION = 5000; // 5 secondi per l'animazione di rallentamento
+            // MODIFICA JS: Aumentata la durata del rallentamento a 7 secondi (7000ms)
+            const DURATION = 7000; 
 
             // 1. Clonazione della striscia per l'effetto di scorrimento infinito
-            // Cloniamo i loghi iniziali molte volte per garantire che l'animazione veloce duri abbastanza
             const initialLogos = Array.from(filmStrip.children).map(node => node.cloneNode(true));
-            for (let i = 0; i < 20; i++) { // Aggiungiamo 20 ripetizioni
+            for (let i = 0; i < 20; i++) { 
                 initialLogos.forEach(clone => filmStrip.appendChild(clone.cloneNode(true)));
             }
 
@@ -213,10 +214,8 @@
                 filmStrip.style.transition = 'none';
                 
                 // Resetta la posizione (sposta la striscia all'inizio)
-                // Usiamo un valore negativo grande per simulare l'inizio della rotazione rapida
                 filmStrip.style.transform = `translateX(-${(filmStrip.scrollWidth * 0.7) - winningImage.offsetLeft}px)`; 
                 
-                // Forza un reflow per assicurare che il reset sia applicato prima della nuova animazione
                 void filmStrip.offsetWidth;
 
                 // 1. Animazione veloce (CSS)
@@ -231,12 +230,10 @@
                     const containerWidth = filmStrip.parentElement.clientWidth;
                     const winningOffset = winningImage.offsetLeft; 
                     
-                    // Vogliamo che il lato sinistro dell'immagine vincente sia al centro del container
-                    // FINAL_STOP_X = (metà container) - (metà immagine) - (posizione dell'immagine dall'inizio)
-                    // Per fermarla al centro dell'inquadratura:
+                    // Posiziona il centro dell'immagine vincente al centro del container
                     const FINAL_STOP_X = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                     
-                    // Imposta la transizione per il rallentamento (cubic-bezier crea il rallentamento)
+                    // Imposta la transizione per il rallentamento (cubic-bezier)
                     filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.2, 0.8, 0.7, 1)`;
                     
                     // Applica la trasformazione per posizionare l'immagine vincente al centro
@@ -245,7 +242,6 @@
                 }, 100); // Piccolo ritardo per avviare prima l'animazione CSS
 
                 // 2. Gestisci la fine dell'animazione
-                // L'evento 'transitionend' si attiva quando la transizione di rallentamento finisce
                 filmStrip.addEventListener('transitionend', handleSpinEnd, { once: true });
             }
 
@@ -283,7 +279,7 @@
                     confetti.style.left = `${Math.random() * 100}vw`;
                     confetti.style.width = `${5 + Math.random() * 5}px`;
                     confetti.style.height = confetti.style.width;
-                    confetti.style.borderRadius = `${Math.random() > 0.5 ? '50%' : '0'}`; // Cerchio o quadrato
+                    confetti.style.borderRadius = `${Math.random() > 0.5 ? '50%' : '0'}`; 
                     
                     // Animazione e ritardo casuali
                     confetti.style.animationDelay = `${Math.random() * 3}s`;
