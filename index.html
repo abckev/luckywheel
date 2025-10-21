@@ -30,9 +30,9 @@
             position: relative;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             background-color: #fff;
-            /* Aggiungi transizione per la scomparsa fluida del container */
+            /* Transizione per la scomparsa fluida del container */
             transition: all 0.7s ease-in-out; 
-            margin-bottom: 20px; /* Spazio sotto la ruota */
+            margin-bottom: 20px;
         }
 
         .pointer {
@@ -49,12 +49,11 @@
         .film-strip {
             display: flex;
             height: 100%;
-            /* La transizione verrà gestita da JavaScript per il rallentamento */
         }
 
         .film-strip img {
             height: 100%;
-            width: 200px; /* Larghezza fissa per ogni logo */
+            width: 200px;
             object-fit: contain;
             padding: 0 10px;
             flex-shrink: 0;
@@ -65,14 +64,15 @@
         /* Animazione di scorrimento veloce */
         @keyframes fast-spin {
             from { transform: translateX(0); }
-            to { transform: translateX(-1000px); /* Sposta di una quantità fissa */ }
+            to { transform: translateX(-1000px); }
         }
 
         .spinning {
+            /* Mantenuta a 0.3s per una rotazione iniziale fluida */
             animation: fast-spin 0.3s linear infinite; 
         }
 
-        /* Nuovo stile per nascondere la ruota in modo fluido */
+        /* Stile per nascondere la ruota in modo fluido */
         .wheel-container.hidden {
             opacity: 0;
             transform: scale(0.5);
@@ -88,7 +88,7 @@
             font-size: 24px;
             font-weight: bold;
             color: white;
-            background-color: #e74c3c; /* Rosso VIVO */
+            background-color: #e74c3c;
             border: 2px solid #c0392b;
             border-radius: 8px;
             cursor: pointer;
@@ -107,22 +107,21 @@
             cursor: not-allowed;
         }
 
-        /* === Contenitore della vittoria finale === */
-        /* Questo sarà il container che apparirà alla fine */
+        /* === Contenitore della vittoria finale (Nascosto all'inizio) === */
         .final-winner-display {
-            position: fixed; /* O absolute, a seconda del layout desiderato */
+            position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.1); /* Inizia piccolo e centrato */
+            transform: translate(-50%, -50%) scale(0.1); 
             opacity: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 20px;
-            z-index: 900; /* Sotto i coriandoli, ma sopra il body */
-            transition: all 1s ease-out; /* Transizione per l'apparizione fluida */
-            pointer-events: none; /* Inizialmente non interagibile */
+            z-index: 900;
+            transition: all 1s ease-out; 
+            pointer-events: none;
         }
 
         .final-winner-display.show {
@@ -132,12 +131,12 @@
         }
 
         .final-winner-display img {
-            width: 300px; /* Grande per l'immagine vincente */
+            width: 300px;
             height: auto;
             object-fit: contain;
-            filter: grayscale(0); /* Sempre a colori qui */
-            box-shadow: 0 0 30px rgba(255, 255, 0, 0.7); /* Effetto luminoso */
-            border-radius: 15px; /* Angoli arrotondati */
+            filter: grayscale(0);
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.7);
+            border-radius: 15px;
         }
 
         .final-winner-message {
@@ -150,19 +149,17 @@
 
 
         /* === Effetto Coriandoli === */
-        /* Questo overlay serve solo per generare i coriandoli */
         .confetti-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            display: none; /* Inizialmente nascosto */
+            display: none;
             z-index: 1000;
-            pointer-events: none; /* Permette di cliccare sotto */
+            pointer-events: none;
         }
         
-        /* Stili per i coriandoli */
         .confetti {
             position: absolute;
             width: 10px;
@@ -220,15 +217,17 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const wheelContainer = document.getElementById('wheelContainer'); // Nuovo riferimento
+            const wheelContainer = document.getElementById('wheelContainer');
             const filmStrip = document.getElementById('filmStrip');
             const spinButton = document.getElementById('spinButton');
             const winningImage = document.getElementById('winningImage');
             const confettiOverlay = document.getElementById('confettiOverlay');
-            const finalWinnerDisplay = document.getElementById('finalWinnerDisplay'); // Nuovo riferimento
+            const finalWinnerDisplay = document.getElementById('finalWinnerDisplay');
 
             const IMAGE_WIDTH = 220; 
-            const DURATION = 7000; 
+            // IMPOSTAZIONE: Durata totale del rallentamento ridotta a 4 secondi
+            const DURATION = 4000; 
+            const DELAY_BEFORE_WIN_EFFECT = 2000; // 2 secondi di attesa dopo lo stop
 
             // 1. Clonazione della striscia per l'effetto di scorrimento infinito
             const initialLogos = Array.from(filmStrip.children).map(node => node.cloneNode(true));
@@ -239,67 +238,79 @@
             function startSpin() {
                 if (spinButton.disabled) return;
 
-                // Reset degli stili per un nuovo giro
+                // Reset degli stili
                 spinButton.disabled = true;
                 confettiOverlay.style.display = 'none';
-                finalWinnerDisplay.classList.remove('show'); // Nasconde il display finale
-                wheelContainer.classList.remove('hidden'); // Mostra la ruota
+                finalWinnerDisplay.classList.remove('show');
+                wheelContainer.classList.remove('hidden');
+                spinButton.style.display = 'block'; // Assicura che il pulsante sia visibile
 
                 winningImage.style.transform = 'scale(1)';
                 winningImage.style.filter = 'grayscale(0.5)';
                 Array.from(filmStrip.querySelectorAll('img')).forEach(img => img.style.filter = 'grayscale(0.5)');
                 
                 filmStrip.style.transition = 'none';
+                
+                // Sposta la striscia per iniziare il giro veloce
                 filmStrip.style.transform = `translateX(-${(filmStrip.scrollWidth * 0.7) - winningImage.offsetLeft}px)`; 
                 void filmStrip.offsetWidth;
 
+                // 1. Animazione veloce (CSS)
                 filmStrip.classList.add('spinning');
 
+                // 2. Avvia il rallentamento dopo un breve periodo di rotazione veloce
                 setTimeout(() => {
                     filmStrip.classList.remove('spinning');
 
                     const containerWidth = filmStrip.parentElement.clientWidth;
                     const winningOffset = winningImage.offsetLeft; 
                     
+                    // Calcola la posizione per centrare la Pixar sul puntatore
                     const FINAL_STOP_X = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                     
+                    // Applica la transizione di 4 secondi con rallentamento
                     filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.2, 0.8, 0.7, 1)`;
                     filmStrip.style.transform = `translateX(${FINAL_STOP_X}px)`;
 
                 }, 100); 
 
+                // 3. Gestisci la fine della transizione
                 filmStrip.addEventListener('transitionend', handleSpinEnd, { once: true });
             }
 
             function handleSpinEnd() {
-                // 1. Ingrandisci brevemente il logo Pixar all'interno della striscia (effetto "colpo")
-                winningImage.style.transform = 'scale(1.3)'; // Piccolo ingrandimento iniziale
-                winningImage.style.filter = 'grayscale(0)'; // Diventa a colori
-                
-                // 2. Dopo un breve istante, nascondi la ruota e mostra il display finale
-                setTimeout(() => {
-                    wheelContainer.classList.add('hidden'); // Nasconde la ruota in modo fluido
-                    spinButton.style.display = 'none'; // Nasconde anche il pulsante per pulire la scena
+                // Il giro è finito. La ruota è ferma sul logo Pixar.
 
-                    // Mostra il display finale con il logo Pixar ingrandito
+                // Rendi il logo Pixar vividio (opzionale, ma bello)
+                winningImage.style.filter = 'grayscale(0)'; 
+                
+                // 2. Attendi 2 secondi prima di attivare l'animazione di vittoria
+                setTimeout(() => {
+                    // Nascondi il container della ruota (e il puntatore)
+                    wheelContainer.classList.add('hidden'); 
+                    
+                    // Nascondi il pulsante
+                    spinButton.style.display = 'none'; 
+
+                    // Mostra il display finale ingrandito e centrato
                     finalWinnerDisplay.classList.add('show');
-                    confettiOverlay.style.display = 'block'; // Attiva i coriandoli
+                    confettiOverlay.style.display = 'block'; 
                     createConfetti();
 
-                    // Opzionale: puoi ri-mostrare il pulsante dopo un certo tempo, 
-                    // o per un nuovo giro, ma per ora lo lasciamo nascosto.
-                    // setTimeout(() => {
-                    //     spinButton.style.display = 'block';
-                    //     spinButton.disabled = false;
-                    // }, 2000); // Mostra il pulsante dopo 2 secondi
+                }, DELAY_BEFORE_WIN_EFFECT);
+                
+                // Riabilita il pulsante per un nuovo giro (solo dopo che l'animazione di vittoria è finita, o subito per test)
+                 setTimeout(() => {
+                     spinButton.style.display = 'block';
+                     spinButton.disabled = false;
+                 }, DELAY_BEFORE_WIN_EFFECT + 1000); // Ritorna il pulsante 1 secondo dopo che la vittoria è apparsa
 
-                }, 700); // Attendi un po' prima di nascondere la ruota per l'effetto "colpo"
             }
 
             spinButton.addEventListener('click', startSpin);
             
             // =================================================
-            // Funzione per generare i coriandoli
+            // Funzione per generare i coriandoli (invariata)
             // =================================================
             function createConfetti() {
                 const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
