@@ -106,7 +106,7 @@
             border-radius: 8px;
             cursor: pointer;
             box-shadow: 0 5px 0 #c0392b;
-            transition: all 0.3s ease, opacity 0.5s ease; /* Aggiunto transizione per l'opacità */
+            transition: all 0.3s ease, opacity 0.5s ease;
         }
         
         .spin-button:hover {
@@ -124,7 +124,7 @@
             box-shadow: 0 2px 0 #6c6c6c;
             cursor: not-allowed;
             pointer-events: none;
-            opacity: 0; /* Nascondi alla fine */
+            opacity: 0; 
         }
 
 
@@ -254,7 +254,7 @@
             
             // Duplica i loghi per rendere la striscia molto lunga
             const initialLogos = Array.from(filmStrip.children);
-            for (let i = 0; i < 40; i++) { 
+            for (let i = 0; i < 40; i++) { // Duplica molte volte per garantire abbastanza spazio per la rotazione
                 initialLogos.forEach(node => filmStrip.appendChild(node.cloneNode(true)));
             }
 
@@ -263,7 +263,7 @@
 
                 // --- 1. PREPARAZIONE E NASCONDERE PULSANTE ---
                 spinButton.disabled = true;
-                spinButton.classList.add('disabled'); // Applica la classe per opacità e pointer-events
+                spinButton.classList.add('disabled'); 
                 
                 confettiOverlay.style.display = 'none';
                 finalWinnerDisplay.classList.remove('show');
@@ -273,31 +273,89 @@
                     img.style.filter = 'grayscale(0.7)';
                 });
                 
-                filmStrip.style.transition = 'none';
-                
-                // Imposta un punto di partenza per la rotazione.
-                const startPosition = winningImage.offsetLeft + (winningImage.offsetWidth * 25);
-                filmStrip.style.transform = `translateX(-${startPosition}px)`; 
+                filmStrip.style.transition = 'none'; // Rimuove transizioni precedenti per un reset pulito
+                filmStrip.style.transform = 'translateX(0)'; // Reset della posizione iniziale per il calcolo
+
+                // Forza il reflow per applicare il reset
                 void filmStrip.offsetWidth;
 
-                // --- 2. AVVIO ANIMAZIONE A DUE FASI ---
+                // --- 2. CALCOLO POSIZIONE FINALE E AVVIO ANIMAZIONE ---
                 const containerWidth = wheelContainer.clientWidth;
+                const winningImageWidth = winningImage.offsetWidth;
                 const winningOffset = winningImage.offsetLeft; 
+                const filmStripWidth = filmStrip.scrollWidth; // Larghezza totale della striscia (molto grande)
+
+                // Calcola la posizione dove l'immagine Pixar deve fermarsi al centro del container
+                const targetX = (containerWidth / 2) - (winningImageWidth / 2);
+
+                // Determina la quantità minima di "scorrimento" per arrivare all'immagine Pixar
+                // Questo valore è l'offset necessario per portare il bordo sinistro della Pixar a 0,
+                // poi lo si adatta per centrarla.
+                const offsetToWinningImage = winningOffset - targetX;
+
+                // Per garantire che la ruota faccia "almeno un giro" (e sembri girare)
+                // e si fermi sulla Pixar corretta, calcoliamo una posizione di "sicurezza".
+                // Dobbiamo far scorrere la striscia verso sinistra (translateX negativo).
+                // Per un giro orario apparente, la striscia si sposta a sinistra.
                 
-                // Calcola la posizione finale per centrare la Pixar.
-                const finalStopX = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
-                const intermediateStopX = finalStopX + 500;
+                // Quante "ripetizioni" di loghi ci sono prima della Pixar vincente
+                // (considerando le 40 duplicazioni e i loghi iniziali).
+                // La "winningImage" è la settima immagine nel markup iniziale.
+                const initialImageCountBeforeWinner = 6; 
+                const imageWidthWithPadding = winningImageWidth + (filmStrip.querySelector('img').style.paddingLeft.replace('px','') * 2 || 10); // Estrae il padding, default 10 se non definito
 
-                // **FASE 1: 4 secondi veloci**
+                // Calcola quante immagini sono visibili nel container circa
+                const visibleImagesCount = Math.ceil(containerWidth / imageWidthWithPadding);
+
+                // Per garantire un giro visibile (e non solo un piccolo spostamento)
+                // facciamo in modo che la ruota scorra di un numero sufficiente di immagini intere (es. 20-30 immagini)
+                // più la distanza esatta al logo vincente.
+                const imagesToScrollPast = (Math.floor(filmStripWidth / imageWidthWithPadding / initialLogos.length) * initialLogos.length) - initialImageCountBeforeWinner + (visibleImagesCount * 2); 
+                // Assicura almeno qualche "blocco" intero di loghi + visibile
+
+                const finalScrollPosition = (imagesToScrollPast * imageWidthWithPadding) - targetX;
+                
+                // Per un movimento orario, il transform X deve essere negativo.
+                // La posizione finale del transform è -(posizione_del_bordo_sinistro_dell'immagine_pixar_nel_filmstrip_gigante) + (offset_per_centrare_nel_container)
+                const finalStopPositionX = -(winningOffset + (initialLogos.length * 25 * imageWidthWithPadding) - (containerWidth / 2) + (winningImageWidth / 2));
+                // Questo calcolo è più robusto: trova la posizione della Pixar nel lungo filmstrip
+                // e la sposta a sinistra in modo che sia centrata nel container.
+                // Il valore `initialLogos.length * 25` è il numero di set di duplicati che abbiamo *superato*
+                // per arrivare alla specifica `winningImage` che è molto in fondo al filmstrip duplicato.
+                // Il 25 è un numero arbitrario abbastanza grande per far fare molti giri.
+                
+                // Calcoliamo la posizione della winningImage all'interno del filmStrip (molto lungo)
+                const targetWinningImageIndex = initialImageCountBeforeWinner + (25 * initialLogos.length); // La nostra winningImage è la 7a (index 6) nell'originale, e vogliamo una delle sue copie dopo molti giri. `25` è il numero di blocchi di duplicazioni da superare.
+                const exactWinningImageOffset = (targetWinningImageIndex * imageWidthWithPadding) + (imageWidthWithPadding / 2); // Centro dell'immagine nel filmstrip
+
+                // La posizione finale `translateX` sarà per portare questo centro al centro del `wheel-container`
+                const finalTranslateX = (containerWidth / 2) - exactWinningImageOffset;
+
+                // Assicurati che il valore sia negativo per un movimento da destra a sinistra (orario)
+                // e che faccia "abbastanza" giri.
+                // Se finalTranslateX è positivo, aggiungiamo multipli della larghezza totale del filmStrip originale
+                // fino a renderlo un grande numero negativo.
+                let effectiveFinalTranslateX = finalTranslateX;
+                while (effectiveFinalTranslateX > -filmStripWidth / 2) { // Assicura molti giri
+                     effectiveFinalTranslateX -= (initialLogos.length * imageWidthWithPadding); // Sottrae la larghezza di un blocco di loghi
+                }
+                effectiveFinalTranslateX = Math.min(effectiveFinalTranslateX, - (filmStripWidth / 2)); // Limita per non scorrere troppo
+
+                // Modifichiamo l'intermediateStopX per puntare a un punto molto più indietro (a sinistra)
+                // per simulare lo scorrimento iniziale veloce.
+                const fastScrollAmount = filmStripWidth / 4; // scorre un quarto della lunghezza totale in fretta
+                const intermediateTranslateX = effectiveFinalTranslateX - fastScrollAmount;
+
+
+                // **FASE 1: Rotazione veloce**
                 filmStrip.style.transition = `transform ${FAST_DURATION / 1000}s cubic-bezier(0.2, 0.7, 0.9, 1)`;
-                filmStrip.style.transform = `translateX(${intermediateStopX}px)`;
+                filmStrip.style.transform = `translateX(${intermediateTranslateX}px)`;
 
-                // **FASE 2: 2 secondi di rallentamento**
+                // **FASE 2: Rallentamento e fermata precisa**
                 setTimeout(() => {
-                    filmStrip.style.transition = `transform ${SLOW_DURATION / 1000}s ease-out`;
-                    filmStrip.style.transform = `translateX(${finalStopX}px)`;
+                    filmStrip.style.transition = `transform ${SLOW_DURATION / 1000}s ease-out`; // Rallenta vistosamente
+                    filmStrip.style.transform = `translateX(${effectiveFinalTranslateX}px)`; // Arriva alla posizione finale
                 }, FAST_DURATION);
-
 
                 // Listener per quando la transizione FINALE è completata.
                 filmStrip.addEventListener('transitionend', handleSpinEnd, { once: true });
