@@ -13,7 +13,7 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #1a1a1a; /* Sfondo scuro per far risaltare l'animazione */
+            background-color: #1a1a1a; /* Sfondo scuro per un effetto migliore */
             overflow: hidden;
             font-family: Arial, sans-serif;
         }
@@ -27,14 +27,14 @@
             overflow: hidden;
             position: relative;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            background-color: #2c2c2c;
+            background: linear-gradient(to right, #2c2c2c, #3a3a3a);
             transition: all 0.7s ease-in-out; 
             margin-bottom: 20px;
         }
 
         .pointer {
             position: absolute;
-            top: -5px; /* Leggermente più in alto per un look migliore */
+            top: -5px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -46,7 +46,6 @@
         .film-strip {
             display: flex;
             height: 100%;
-            /* La transizione verrà applicata da JavaScript */
         }
 
         .film-strip img {
@@ -55,8 +54,8 @@
             object-fit: contain;
             padding: 0 10px;
             flex-shrink: 0;
-            transition: transform 0.5s ease-out, filter 0.5s ease-out; 
-            filter: grayscale(0.7); /* Loghi più scuri per far risaltare il vincitore */
+            transition: filter 0.5s ease-out; 
+            filter: grayscale(0.7);
         }
 
         .wheel-container.hidden {
@@ -87,12 +86,6 @@
             transform: translateY(3px);
         }
 
-        .spin-button:disabled {
-            background-color: #95a5a6;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-
         /* CONTENITORE VITTORIA FINALE */
         .final-winner-display {
             position: fixed;
@@ -106,7 +99,6 @@
             justify-content: center;
             gap: 20px;
             z-index: 900;
-            /* Transizione con "rimbalzo" per un effetto più dinamico */
             transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
             pointer-events: none;
         }
@@ -122,7 +114,6 @@
             height: auto;
             object-fit: contain;
             filter: grayscale(0);
-            /* Effetto luminoso dorato */
             box-shadow: 0 0 15px gold, 0 0 30px gold, 0 0 45px #ffab00;
             border-radius: 15px;
         }
@@ -173,17 +164,13 @@
             <img src="logo_d.png" alt="Studio D">
             <img src="logo_e.png" alt="Studio E">
             <img src="logo_f.png" alt="Studio F">
-            <img src="logo_a.png" alt="Studio A">
-            <img src="logo_b.png" alt="Studio B">
             
             <img src="pixar.png" alt="Pixar VINCITORE" id="winningImage">
             
-            <img src="logo_f.png" alt="Studio F">
             <img src="logo_g.png" alt="Studio G">
             <img src="logo_h.png" alt="Studio H">
             <img src="logo_a.png" alt="Studio A">
             <img src="logo_b.png" alt="Studio B">
-            <img src="logo_c.png" alt="Studio C">
         </div>
     </div>
 
@@ -205,12 +192,13 @@
             const confettiOverlay = document.getElementById('confettiOverlay');
             const finalWinnerDisplay = document.getElementById('finalWinnerDisplay');
 
-            // **Durata totale dell'animazione: 6 secondi.**
-            const DURATION = 6000; 
+            // Durata delle due fasi dell'animazione
+            const FAST_DURATION = 4000; // 4 secondi veloci
+            const SLOW_DURATION = 2000; // 2 secondi di rallentamento
             
-            // Duplica i loghi per assicurare che la striscia sia abbastanza lunga per un giro fluido.
+            // Duplica i loghi per rendere la striscia molto lunga
             const initialLogos = Array.from(filmStrip.children);
-            for (let i = 0; i < 30; i++) { 
+            for (let i = 0; i < 40; i++) { 
                 initialLogos.forEach(node => filmStrip.appendChild(node.cloneNode(true)));
             }
 
@@ -219,55 +207,60 @@
 
                 // --- 1. PREPARAZIONE E RESET ---
                 spinButton.disabled = true;
-                spinButton.style.display = 'none'; // Il pulsante scompare subito.
+                spinButton.style.display = 'none'; // Il pulsante scompare.
                 
                 confettiOverlay.style.display = 'none';
                 finalWinnerDisplay.classList.remove('show');
                 wheelContainer.classList.remove('hidden');
-
+                
                 Array.from(filmStrip.querySelectorAll('img')).forEach(img => {
                     img.style.filter = 'grayscale(0.7)';
                 });
                 
-                filmStrip.style.transition = 'none'; // Rimuove la transizione per un reset istantaneo.
+                filmStrip.style.transition = 'none'; // Rimuove transizioni precedenti.
                 
-                // Imposta un punto di partenza che garantisce una rotazione visibile e lunga.
-                const startPosition = winningImage.offsetLeft + (winningImage.offsetWidth * 20);
+                // Imposta un punto di partenza per la rotazione.
+                const startPosition = winningImage.offsetLeft + (winningImage.offsetWidth * 25);
                 filmStrip.style.transform = `translateX(-${startPosition}px)`; 
-                void filmStrip.offsetWidth; // Forza il browser a registrare la nuova posizione di partenza.
+                void filmStrip.offsetWidth;
 
-                // --- 2. AVVIO DELL'ANIMAZIONE DI 6 SECONDI ---
+                // --- 2. AVVIO ANIMAZIONE A DUE FASI ---
                 const containerWidth = wheelContainer.clientWidth;
                 const winningOffset = winningImage.offsetLeft; 
                 
-                // Calcola la posizione finale per centrare la Pixar sotto il puntatore.
+                // Calcola la posizione finale per centrare la Pixar.
                 const finalStopX = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                 
-                // **La logica chiave è qui**:
-                // Applica una singola transizione di 6 secondi con una curva `cubic-bezier` personalizzata.
-                // Questa curva fa sì che l'animazione sia veloce all'inizio e rallenti progressivamente verso la fine.
-                filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.15, 0.5, 0.4, 1)`; 
-                filmStrip.style.transform = `translateX(${finalStopX}px)`;
+                // Calcola una posizione intermedia (un po' prima della fine) da raggiungere in 4 secondi.
+                const intermediateStopX = finalStopX + 500; // Si fermerà 500px prima del traguardo.
 
-                // Listener per quando la transizione di 6 secondi è completata.
+                // **FASE 1: 4 secondi veloci**
+                filmStrip.style.transition = `transform ${FAST_DURATION / 1000}s cubic-bezier(0.2, 0.7, 0.9, 1)`;
+                filmStrip.style.transform = `translateX(${intermediateStopX}px)`;
+
+                // **FASE 2: 2 secondi di rallentamento**
+                setTimeout(() => {
+                    filmStrip.style.transition = `transform ${SLOW_DURATION / 1000}s ease-out`; // Rallenta vistosamente
+                    filmStrip.style.transform = `translateX(${finalStopX}px)`; // Arriva alla posizione finale
+                }, FAST_DURATION);
+
+
+                // Listener per quando la transizione FINALE (la seconda) è completata.
                 filmStrip.addEventListener('transitionend', handleSpinEnd, { once: true });
             }
 
             function handleSpinEnd() {
                 // --- 3. ANIMAZIONE DI VITTORIA ---
-                
-                // Rende il logo Pixar colorato per un istante prima della transizione finale.
-                winningImage.style.filter = 'grayscale(0)';
+                winningImage.style.filter = 'grayscale(0)'; // Illumina il vincitore
 
-                // Un piccolo ritardo per far "assestare" la vittoria prima di cambiare schermata.
                 setTimeout(() => {
                     wheelContainer.classList.add('hidden'); // Nasconde la ruota.
-                    finalWinnerDisplay.classList.add('show'); // Mostra il logo ingrandito e la scritta.
+                    finalWinnerDisplay.classList.add('show'); // Mostra la schermata di vittoria.
                     confettiOverlay.style.display = 'block'; 
                     createConfetti();
-                }, 400); // 400ms di ritardo.
+                }, 400);
                 
-                // Fa riapparire il pulsante dopo 4 secondi, pronto per un nuovo giro.
+                // Fa riapparire il pulsante dopo 4 secondi.
                 setTimeout(() => {
                     spinButton.style.display = 'block';
                     spinButton.disabled = false;
@@ -277,10 +270,10 @@
             spinButton.addEventListener('click', startSpin);
             
             function createConfetti() {
-                const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
-                const numConfetti = 80; // Aumentati per un effetto più ricco
+                const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', 'gold', 'white'];
+                const numConfetti = 80;
                 
-                confettiOverlay.innerHTML = ''; // Pulisce i coriandoli precedenti
+                confettiOverlay.innerHTML = '';
 
                 for (let i = 0; i < numConfetti; i++) {
                     const confetti = document.createElement('div');
