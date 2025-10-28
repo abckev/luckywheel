@@ -202,7 +202,7 @@
             const confettiOverlay = document.getElementById('confettiOverlay');
             const finalWinnerDisplay = document.getElementById('finalWinnerDisplay');
 
-            // **CORREZIONE**: Durata totale dell'animazione fissata a 6 secondi.
+            // Durata totale dell'animazione fissata a 6 secondi.
             const DURATION = 6000; 
             
             // Clonazione dei loghi per un effetto infinito
@@ -216,10 +216,12 @@
 
                 // --- Reset per un nuovo giro ---
                 spinButton.disabled = true;
+                // CORREZIONE: Il bottone scompare subito.
+                spinButton.style.display = 'none'; 
+                
                 confettiOverlay.style.display = 'none';
                 finalWinnerDisplay.classList.remove('show');
                 wheelContainer.classList.remove('hidden');
-                spinButton.style.display = 'block';
 
                 Array.from(filmStrip.querySelectorAll('img')).forEach(img => {
                     img.style.transform = 'scale(1)';
@@ -229,9 +231,9 @@
                 // Rimuove la transizione precedente per un reset istantaneo
                 filmStrip.style.transition = 'none';
                 
-                // Imposta un punto di partenza casuale per dare varietà al giro
-                const randomOffset = Math.random() * 2000;
-                filmStrip.style.transform = `translateX(-${(filmStrip.scrollWidth * 0.7) - winningImage.offsetLeft - randomOffset}px)`; 
+                // CORREZIONE: Imposta un punto di partenza più lontano per rendere la rotazione più lunga e visibile.
+                const travelDistance = filmStrip.scrollWidth * 0.9;
+                filmStrip.style.transform = `translateX(-${travelDistance - winningImage.offsetLeft}px)`; 
                 void filmStrip.offsetWidth; // Forza il browser a registrare il reset
 
                 // --- Avvio dell'animazione di 6 secondi ---
@@ -241,7 +243,7 @@
                 // Calcola la posizione finale per centrare la Pixar sotto il puntatore
                 const FINAL_STOP_X = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                 
-                // **MODIFICA**: Applica una singola transizione di 6 secondi con una curva
+                // CORREZIONE: Applica una singola transizione di 6 secondi con una curva
                 // che parte piano, accelera e poi rallenta dolcemente (ease-in-out).
                 filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.42, 0, 0.58, 1)`; 
                 filmStrip.style.transform = `translateX(${FINAL_STOP_X}px)`;
@@ -255,25 +257,26 @@
                 
                 // 1. Nascondi la ruota
                 wheelContainer.classList.add('hidden'); 
-                spinButton.style.display = 'none'; 
+                // Il bottone è già nascosto, non serve fare altro qui.
 
                 // 2. Mostra l'animazione di vittoria
                 finalWinnerDisplay.classList.add('show');
                 confettiOverlay.style.display = 'block'; 
                 createConfetti();
                 
-                // 3. Riabilita il pulsante dopo un po' per permettere un nuovo giro
+                // 3. Riabilita e fa riapparire il pulsante dopo qualche secondo
+                // per permettere un nuovo giro.
                 setTimeout(() => {
                     spinButton.style.display = 'block';
                     spinButton.disabled = false;
-                }, 2000); 
+                }, 4000); // CORREZIONE: Aumentato il ritardo a 4 secondi
             }
 
             spinButton.addEventListener('click', startSpin);
             
             function createConfetti() {
                 const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
-                const numConfetti = 60; // Aumentati per un effetto più ricco
+                const numConfetti = 60;
                 
                 // Rimuove i coriandoli precedenti
                 confettiOverlay.innerHTML = '';
@@ -284,7 +287,7 @@
                     
                     confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                     confetti.style.left = `${Math.random() * 100}vw`;
-                    confetti.style.width = `${8 + Math.random() * 8}px`; // Più grandi
+                    confetti.style.width = `${8 + Math.random() * 8}px`;
                     confetti.style.height = confetti.style.width;
                     confetti.style.borderRadius = `${Math.random() > 0.5 ? '50%' : '0'}`; 
                     
