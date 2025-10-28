@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ruota della Fortuna Cinematografica</title>
     <style>
-        /* ================================================= */
-        /* === STILI CSS === */
-        /* ================================================= */
+        /* CSS STYLES */
         body {
             display: flex;
             flex-direction: column;
@@ -60,17 +58,6 @@
             filter: grayscale(0.5); 
         }
 
-        /* Animazione di scorrimento veloce */
-        @keyframes fast-spin {
-            from { transform: translateX(0); }
-            to { transform: translateX(-1000px); }
-        }
-
-        .spinning {
-            /* Velocità di rotazione iniziale */
-            animation: fast-spin 0.8s linear infinite; 
-        }
-
         .wheel-container.hidden {
             opacity: 0;
             transform: scale(0.5);
@@ -79,7 +66,7 @@
             border: none;
         }
 
-        /* === Pulsante "Premi" === */
+        /* PULSANTE "PREMI" */
         .spin-button {
             margin-top: 30px;
             padding: 15px 30px;
@@ -105,7 +92,7 @@
             cursor: not-allowed;
         }
 
-        /* === Contenitore della vittoria finale === */
+        /* CONTENITORE VITTORIA FINALE */
         .final-winner-display {
             position: fixed;
             top: 50%;
@@ -118,7 +105,7 @@
             justify-content: center;
             gap: 20px;
             z-index: 900;
-            transition: all 0.7s ease-out; 
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* Transizione con "rimbalzo" */
             pointer-events: none;
         }
 
@@ -145,8 +132,7 @@
             text-align: center;
         }
 
-
-        /* === Effetto Coriandoli === */
+        /* EFFETTO CORIANDOLI */
         .confetti-overlay {
             position: fixed;
             top: 0;
@@ -164,12 +150,12 @@
             height: 10px;
             background-color: #f00; 
             opacity: 0;
-            animation: fall 3s ease-in infinite;
+            animation: fall 3s linear infinite;
         }
 
         @keyframes fall {
             0% { transform: translateY(-100vh) rotateZ(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotateZ(180deg); opacity: 0; }
+            100% { transform: translateY(100vh) rotateZ(360deg); opacity: 0; }
         }
     </style>
 </head>
@@ -177,7 +163,6 @@
 
     <div class="wheel-container" id="wheelContainer">
         <div class="pointer">▼</div>
-
         <div class="film-strip" id="filmStrip">
             <img src="logo_a.png" alt="Studio A">
             <img src="logo_b.png" alt="Studio B">
@@ -188,19 +173,14 @@
             <img src="logo_a.png" alt="Studio A">
             <img src="logo_b.png" alt="Studio B">
             <img src="logo_c.png" alt="Studio C">
-            <img src="logo_d.png" alt="Studio D">
-            <img src="logo_e.png" alt="Studio E">
             
-            <img src="pixar.png" alt="Pixar VINCITORE" id="winningImage" class="winner-target">
+            <img src="pixar.png" alt="Pixar VINCITORE" id="winningImage">
             
             <img src="logo_f.png" alt="Studio F">
             <img src="logo_g.png" alt="Studio G">
             <img src="logo_h.png" alt="Studio H">
             <img src="logo_a.png" alt="Studio A">
             <img src="logo_b.png" alt="Studio B">
-            <img src="logo_c.png" alt="Studio C">
-            <img src="logo_d.png" alt="Studio D">
-            <img src="logo_e.png" alt="Studio E">
         </div>
     </div>
 
@@ -222,93 +202,81 @@
             const confettiOverlay = document.getElementById('confettiOverlay');
             const finalWinnerDisplay = document.getElementById('finalWinnerDisplay');
 
-            const IMAGE_WIDTH = 220; 
-            // CORREZIONE: Durata totale del rallentamento fissata a 6 secondi
-            const DURATION = 60000; 
+            // **CORREZIONE**: Durata totale dell'animazione fissata a 6 secondi.
+            const DURATION = 6000; 
             
-            const DELAY_BEFORE_WIN_EFFECT = 0; 
-
-            // 1. Clonazione della striscia per l'effetto di scorrimento infinito
-            const initialLogos = Array.from(filmStrip.children).map(node => node.cloneNode(true));
+            // Clonazione dei loghi per un effetto infinito
+            const initialLogos = Array.from(filmStrip.children);
             for (let i = 0; i < 20; i++) { 
-                initialLogos.forEach(clone => filmStrip.appendChild(clone.cloneNode(true)));
+                initialLogos.forEach(node => filmStrip.appendChild(node.cloneNode(true)));
             }
 
             function startSpin() {
                 if (spinButton.disabled) return;
 
-                // Reset degli stili
+                // --- Reset per un nuovo giro ---
                 spinButton.disabled = true;
                 confettiOverlay.style.display = 'none';
                 finalWinnerDisplay.classList.remove('show');
                 wheelContainer.classList.remove('hidden');
                 spinButton.style.display = 'block';
 
-                winningImage.style.transform = 'scale(1)';
-                winningImage.style.filter = 'grayscale(0.5)';
-                Array.from(filmStrip.querySelectorAll('img')).forEach(img => img.style.filter = 'grayscale(0.5)');
+                Array.from(filmStrip.querySelectorAll('img')).forEach(img => {
+                    img.style.transform = 'scale(1)';
+                    img.style.filter = 'grayscale(0.5)';
+                });
                 
+                // Rimuove la transizione precedente per un reset istantaneo
                 filmStrip.style.transition = 'none';
                 
-                // Sposta la striscia per iniziare il giro (punto di partenza)
-                filmStrip.style.transform = `translateX(-${(filmStrip.scrollWidth * 0.7) - winningImage.offsetLeft}px)`; 
-                void filmStrip.offsetWidth;
+                // Imposta un punto di partenza casuale per dare varietà al giro
+                const randomOffset = Math.random() * 2000;
+                filmStrip.style.transform = `translateX(-${(filmStrip.scrollWidth * 0.7) - winningImage.offsetLeft - randomOffset}px)`; 
+                void filmStrip.offsetWidth; // Forza il browser a registrare il reset
 
-                // Rimuoviamo la classe 'spinning' se presente, e gestiamo il movimento solo con la transizione
-                filmStrip.classList.remove('spinning'); 
-
-                // Avvia il rallentamento immediatamente per farlo durare 6 secondi totali
-                
+                // --- Avvio dell'animazione di 6 secondi ---
                 const containerWidth = wheelContainer.clientWidth;
                 const winningOffset = winningImage.offsetLeft; 
                 
-                // Calcola la posizione per centrare la Pixar sul puntatore
+                // Calcola la posizione finale per centrare la Pixar sotto il puntatore
                 const FINAL_STOP_X = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                 
-                // Applica la transizione di 6 secondi con rallentamento
-                // Utilizzo di una curva leggermente più aggressiva per una frenata dolce in 6 secondi
-                filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.1, 0.7, 0.7, 1)`; 
+                // **MODIFICA**: Applica una singola transizione di 6 secondi con una curva
+                // che parte piano, accelera e poi rallenta dolcemente (ease-in-out).
+                filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.42, 0, 0.58, 1)`; 
                 filmStrip.style.transform = `translateX(${FINAL_STOP_X}px)`;
 
-                // 3. Gestisci la fine della transizione
+                // Listener per quando la transizione di 6 secondi è finita
                 filmStrip.addEventListener('transitionend', handleSpinEnd, { once: true });
             }
 
             function handleSpinEnd() {
-                // Il giro è finito. La ruota è ferma sul logo Pixar.
-
-                // 1. Nascondi la ruota
-                setTimeout(() => {
-                    // Nascondi il container della ruota (e il puntatore)
-                    wheelContainer.classList.add('hidden'); 
-                    
-                    // Nascondi il pulsante
-                    spinButton.style.display = 'none'; 
-
-                    // Mostra il display finale ingrandito e centrato
-                    finalWinnerDisplay.classList.add('show');
-                    confettiOverlay.style.display = 'block'; 
-                    createConfetti();
-
-                }, DELAY_BEFORE_WIN_EFFECT);
+                // Il giro è finito e il puntatore indica la Pixar.
                 
-                 // Riabilita il pulsante dopo che la vittoria è apparsa (per un nuovo giro)
-                 setTimeout(() => {
-                     spinButton.style.display = 'block';
-                     spinButton.disabled = false;
-                 }, DELAY_BEFORE_WIN_EFFECT + 1000); 
+                // 1. Nascondi la ruota
+                wheelContainer.classList.add('hidden'); 
+                spinButton.style.display = 'none'; 
+
+                // 2. Mostra l'animazione di vittoria
+                finalWinnerDisplay.classList.add('show');
+                confettiOverlay.style.display = 'block'; 
+                createConfetti();
+                
+                // 3. Riabilita il pulsante dopo un po' per permettere un nuovo giro
+                setTimeout(() => {
+                    spinButton.style.display = 'block';
+                    spinButton.disabled = false;
+                }, 2000); 
             }
 
             spinButton.addEventListener('click', startSpin);
             
-            // =================================================
-            // Funzione per generare i coriandoli (invariata)
-            // =================================================
             function createConfetti() {
                 const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
-                const numConfetti = 50;
+                const numConfetti = 60; // Aumentati per un effetto più ricco
                 
-                document.querySelectorAll('.confetti').forEach(c => c.remove());
+                // Rimuove i coriandoli precedenti
+                confettiOverlay.innerHTML = '';
 
                 for (let i = 0; i < numConfetti; i++) {
                     const confetti = document.createElement('div');
@@ -316,7 +284,7 @@
                     
                     confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                     confetti.style.left = `${Math.random() * 100}vw`;
-                    confetti.style.width = `${5 + Math.random() * 5}px`;
+                    confetti.style.width = `${8 + Math.random() * 8}px`; // Più grandi
                     confetti.style.height = confetti.style.width;
                     confetti.style.borderRadius = `${Math.random() > 0.5 ? '50%' : '0'}`; 
                     
@@ -330,4 +298,3 @@
     </script>
 </body>
 </html>
-
