@@ -67,7 +67,7 @@
         }
 
         .spinning {
-            /* Mantenuta a 0.8s per un inizio lento/fluido, ma gestita principalmente dalla transizione JS */
+            /* Velocità di rotazione iniziale */
             animation: fast-spin 0.8s linear infinite; 
         }
 
@@ -223,8 +223,8 @@
             const finalWinnerDisplay = document.getElementById('finalWinnerDisplay');
 
             const IMAGE_WIDTH = 220; 
-            // MODIFICA: Durata totale del rallentamento fissata a 8 secondi
-            const DURATION = 8000; 
+            // CORREZIONE: Durata totale del rallentamento fissata a 6 secondi
+            const DURATION = 6000; 
             
             const DELAY_BEFORE_WIN_EFFECT = 0; 
 
@@ -257,7 +257,7 @@
                 // Rimuoviamo la classe 'spinning' se presente, e gestiamo il movimento solo con la transizione
                 filmStrip.classList.remove('spinning'); 
 
-                // Avvia il rallentamento immediatamente per farlo durare 8 secondi totali
+                // Avvia il rallentamento immediatamente per farlo durare 6 secondi totali
                 
                 const containerWidth = wheelContainer.clientWidth;
                 const winningOffset = winningImage.offsetLeft; 
@@ -265,7 +265,8 @@
                 // Calcola la posizione per centrare la Pixar sul puntatore
                 const FINAL_STOP_X = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                 
-                // Applica la transizione di 8 secondi con rallentamento (cubic-bezier)
+                // Applica la transizione di 6 secondi con rallentamento
+                // Utilizzo di una curva leggermente più aggressiva per una frenata dolce in 6 secondi
                 filmStrip.style.transition = `transform ${DURATION / 1000}s cubic-bezier(0.1, 0.7, 0.7, 1)`; 
                 filmStrip.style.transform = `translateX(${FINAL_STOP_X}px)`;
 
@@ -276,7 +277,7 @@
             function handleSpinEnd() {
                 // Il giro è finito. La ruota è ferma sul logo Pixar.
 
-                // 1. Attendi 0 secondi (o un piccolo ritardo) prima di attivare l'animazione di vittoria
+                // 1. Nascondi la ruota
                 setTimeout(() => {
                     // Nascondi il container della ruota (e il puntatore)
                     wheelContainer.classList.add('hidden'); 
