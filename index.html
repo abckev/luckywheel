@@ -10,18 +10,29 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
+            justify-content: flex-start; /* Allineato in alto per il titolo */
+            min-height: 100vh; /* Usa min-height per adattarsi ai contenuti */
             margin: 0;
-            background-color: #1a1a1a; /* Sfondo scuro per un effetto migliore */
-            overflow: hidden;
+            padding-top: 50px; /* Spazio per il titolo */
+            background-color: #1a1a1a;
+            overflow-x: hidden; /* Previene lo scroll orizzontale */
             font-family: Arial, sans-serif;
         }
 
+        /* NUOVO STILE PER IL TITOLO */
+        .main-title {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            padding: 0 10px; /* Aggiunge padding per piccoli schermi */
+        }
+
         .wheel-container {
-            width: 80vw;
-            max-width: 800px;
-            height: 150px;
+            width: 90vw; /* Aumenta l'occupazione orizzontale su mobile */
+            max-width: 600px; /* Ridotto max-width per meglio adattarsi ai tablet */
+            height: 120px; /* Leggermente più piccola su mobile */
             border: 5px solid #444;
             border-radius: 10px;
             overflow: hidden;
@@ -30,6 +41,15 @@
             background: linear-gradient(to right, #2c2c2c, #3a3a3a);
             transition: all 0.7s ease-in-out; 
             margin-bottom: 20px;
+        }
+
+        /* Stili della ruota adattati per mobile */
+        @media (min-width: 600px) {
+            .wheel-container {
+                width: 80vw;
+                max-width: 800px;
+                height: 150px;
+            }
         }
 
         .pointer {
@@ -50,12 +70,19 @@
 
         .film-strip img {
             height: 100%;
-            width: 200px;
+            width: 150px; /* Larghezza ridotta per mostrare più loghi su schermi piccoli */
             object-fit: contain;
-            padding: 0 10px;
+            padding: 0 5px; /* Padding ridotto */
             flex-shrink: 0;
             transition: filter 0.5s ease-out; 
             filter: grayscale(0.7);
+        }
+
+        @media (min-width: 600px) {
+            .film-strip img {
+                width: 200px; /* Torna alla larghezza standard su schermi più grandi */
+                padding: 0 10px;
+            }
         }
 
         .wheel-container.hidden {
@@ -69,8 +96,8 @@
         /* PULSANTE "PREMI" */
         .spin-button {
             margin-top: 30px;
-            padding: 15px 30px;
-            font-size: 24px;
+            padding: 12px 25px; /* Padding leggermente ridotto per mobile */
+            font-size: 20px; /* Font size leggermente ridotto per mobile */
             font-weight: bold;
             color: white;
             background-color: #e74c3c;
@@ -97,10 +124,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 15px; /* Spazio ridotto */
             z-index: 900;
             transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
             pointer-events: none;
+            width: 90%; /* Occupa più spazio orizzontale su mobile */
         }
 
         .final-winner-display.show {
@@ -110,7 +138,7 @@
         }
 
         .final-winner-display img {
-            width: 300px;
+            width: 200px; /* Immagine più piccola su mobile */
             height: auto;
             object-fit: contain;
             filter: grayscale(0);
@@ -118,15 +146,27 @@
             border-radius: 15px;
         }
 
+        @media (min-width: 600px) {
+            .final-winner-display img {
+                width: 300px; /* Torna alla dimensione standard su schermi più grandi */
+            }
+        }
+
         .final-winner-message {
-            font-size: 4em;
+            font-size: 2.5em; /* Font size ridotto per adattarsi a schermi più piccoli */
             font-weight: 900;
             color: gold;
             text-shadow: 2px 2px 10px black, 0 0 15px red;
             text-align: center;
         }
 
-        /* EFFETTO CORIANDOLI */
+        @media (min-width: 600px) {
+            .final-winner-message {
+                font-size: 4em;
+            }
+        }
+
+        /* EFFETTO CORIANDOLI (inalterato) */
         .confetti-overlay {
             position: fixed;
             top: 0;
@@ -155,6 +195,7 @@
 </head>
 <body>
 
+    <h1 class="main-title">Gira la ruota! 🎬</h1>
     <div class="wheel-container" id="wheelContainer">
         <div class="pointer">▼</div>
         <div class="film-strip" id="filmStrip">
@@ -193,10 +234,10 @@
             const finalWinnerDisplay = document.getElementById('finalWinnerDisplay');
 
             // Durata delle due fasi dell'animazione
-            const FAST_DURATION = 4000; // 4 secondi veloci
-            const SLOW_DURATION = 2000; // 2 secondi di rallentamento
+            const FAST_DURATION = 4000;
+            const SLOW_DURATION = 2000;
             
-            // Duplica i loghi per rendere la striscia molto lunga
+            // Duplica i loghi (invariato)
             const initialLogos = Array.from(filmStrip.children);
             for (let i = 0; i < 40; i++) { 
                 initialLogos.forEach(node => filmStrip.appendChild(node.cloneNode(true)));
@@ -207,7 +248,8 @@
 
                 // --- 1. PREPARAZIONE E RESET ---
                 spinButton.disabled = true;
-                spinButton.style.display = 'none'; // Il pulsante scompare.
+                spinButton.style.opacity = '0'; // Rende il pulsante invisibile
+                spinButton.style.pointerEvents = 'none'; // Rende il pulsante non cliccabile
                 
                 confettiOverlay.style.display = 'none';
                 finalWinnerDisplay.classList.remove('show');
@@ -217,7 +259,7 @@
                     img.style.filter = 'grayscale(0.7)';
                 });
                 
-                filmStrip.style.transition = 'none'; // Rimuove transizioni precedenti.
+                filmStrip.style.transition = 'none';
                 
                 // Imposta un punto di partenza per la rotazione.
                 const startPosition = winningImage.offsetLeft + (winningImage.offsetWidth * 25);
@@ -231,8 +273,8 @@
                 // Calcola la posizione finale per centrare la Pixar.
                 const finalStopX = (containerWidth / 2) - (winningImage.offsetWidth / 2) - winningOffset;
                 
-                // Calcola una posizione intermedia (un po' prima della fine) da raggiungere in 4 secondi.
-                const intermediateStopX = finalStopX + 500; // Si fermerà 500px prima del traguardo.
+                // Calcola una posizione intermedia (un po' prima della fine)
+                const intermediateStopX = finalStopX + 500;
 
                 // **FASE 1: 4 secondi veloci**
                 filmStrip.style.transition = `transform ${FAST_DURATION / 1000}s cubic-bezier(0.2, 0.7, 0.9, 1)`;
@@ -240,12 +282,12 @@
 
                 // **FASE 2: 2 secondi di rallentamento**
                 setTimeout(() => {
-                    filmStrip.style.transition = `transform ${SLOW_DURATION / 1000}s ease-out`; // Rallenta vistosamente
-                    filmStrip.style.transform = `translateX(${finalStopX}px)`; // Arriva alla posizione finale
+                    filmStrip.style.transition = `transform ${SLOW_DURATION / 1000}s ease-out`;
+                    filmStrip.style.transform = `translateX(${finalStopX}px)`;
                 }, FAST_DURATION);
 
 
-                // Listener per quando la transizione FINALE (la seconda) è completata.
+                // Listener per quando la transizione FINALE è completata.
                 filmStrip.addEventListener('transitionend', handleSpinEnd, { once: true });
             }
 
@@ -260,11 +302,7 @@
                     createConfetti();
                 }, 400);
                 
-                // Fa riapparire il pulsante dopo 4 secondi.
-                setTimeout(() => {
-                    spinButton.style.display = 'block';
-                    spinButton.disabled = false;
-                }, 4000);
+                // IL PULSANTE NON RIAPPARE COME RICHIESTO
             }
 
             spinButton.addEventListener('click', startSpin);
